@@ -36,9 +36,16 @@ env/
 # Jupyter Notebook
 .ipynb_checkpoints
 
+# Test files (keep in repo for reference)
+# test_*.py
+
 # Data files (optional - comment out if you want to track these)
 # *.csv
 # *.json
+
+# Reports
+semantic_search_report_*.md
+*.html
 
 # OS
 .DS_Store
