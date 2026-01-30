@@ -116,7 +116,7 @@ class ItemRecord:
         Returns:
             Formatted passage string for embedding
         """
-        return f"passage: {{self.combined_text}}"
+        return f"passage: {self.combined_text}"
     
     def is_valid(self) -> bool:
         """
@@ -395,13 +395,13 @@ class DataLoader:
             drive.mount('/content/drive', force_remount=True)
             data_dir = Path("/content/drive/MyDrive/Evolvo")
             if not data_dir.exists():
-                print(f"⚠️ Drive path not found, using: {{Config.DATA_DIR}}")
+                print(f"⚠️ Drive path not found, using: {Config.DATA_DIR}")
                 return Config.DATA_DIR
-            print(f"✓ Using Google Drive: {{data_dir}}")
+            print(f"✓ Using Google Drive: {data_dir}")
             return data_dir
         except ImportError:
             print("🟢 Local environment detected")
-            print(f"✓ Using local directory: {{Config.DATA_DIR}}")
+            print(f"✓ Using local directory: {Config.DATA_DIR}")
             return Config.DATA_DIR
     
     @staticmethod
@@ -420,9 +420,9 @@ class DataLoader:
             ValueError: If file can't be loaded with any encoding
         """
         if not file_path.exists():
-            raise FileNotFoundError(f"❌ File not found: {{file_path}}")
+            raise FileNotFoundError(f"❌ File not found: {file_path}")
         
-        print(f"\n📁 Loading: {{file_path}}")
+        print(f"\n📁 Loading: {file_path}")
         
         # Try multiple encodings for Arabic data
         encodings = ['utf-8', 'utf-8-sig', 'windows-1256', 'latin1']
@@ -437,7 +437,7 @@ class DataLoader:
                              .str.replace('ï»؟', '')
                              .str.strip())
                 
-                print(f"✓ Loaded with encoding: {{encoding}}")
+                print(f"✓ Loaded with encoding: {encoding}")
                 return df
                 
             except (UnicodeDecodeError, Exception) as e:
@@ -464,12 +464,12 @@ class DataLoader:
         missing = [col for col in required_cols if col not in df.columns]
         
         if missing:
-            raise ValueError(f"❌ Missing required columns: {{missing}}")
+            raise ValueError(f"❌ Missing required columns: {missing}")
         
         print(f"\n📊 Data Summary:")
-        print(f"  Rows: {{len(df):,}}")
-        print(f"  Columns: {{list(df.columns)}}")
-        print(f"  Categories: {{df['CategoryTitle'].nunique()}}")
+        print(f"  Rows: {len(df):,}")
+        print(f"  Columns: {list(df.columns)}")
+        print(f"  Categories: {df['CategoryTitle'].nunique()}")
     
     @staticmethod
     def build_records(df: pd.DataFrame) -> List[ItemRecord]:
@@ -505,9 +505,9 @@ class DataLoader:
             except Exception:
                 skipped += 1
         
-        print(f"✓ Built {{len(records):,}} valid records")
+        print(f"✓ Built {len(records):,} valid records")
         if skipped > 0:
-            print(f"  ⚠️ Skipped {{skipped}} invalid records")
+            print(f"  ⚠️ Skipped {skipped} invalid records")
         
         return records
 
@@ -539,16 +539,16 @@ class EmbeddingGenerator:
         self.model_name = model_name
         
         print(f"\n🤖 Loading embedding model...")
-        print(f"  Model: {{model_name}}")
-        print(f"  Device: {{device.upper()}}")
+        print(f"  Model: {model_name}")
+        print(f"  Device: {device.upper()}")
         
         self.model = SentenceTransformer(model_name, device=device)
         
         actual_dim = self.model.get_sentence_embedding_dimension()
-        print(f"✓ Model loaded (dimension: {{actual_dim}})")
+        print(f"✓ Model loaded (dimension: {actual_dim})")
         
         if actual_dim != Config.EMBEDDING_DIM:
-            print(f"⚠️ Warning: Expected dimension {{Config.EMBEDDING_DIM}}, got {{actual_dim}}")
+            print(f"⚠️ Warning: Expected dimension {Config.EMBEDDING_DIM}, got {actual_dim}")
     
     def generate_embeddings(
         self, 
@@ -565,8 +565,8 @@ class EmbeddingGenerator:
         Returns:
             NumPy array of embeddings (n_items, embedding_dim)
         """
-        print(f"\n🔄 Generating embeddings for {{len(records):,}} items...")
-        print(f"  Batch size: {{batch_size}}")
+        print(f"\n🔄 Generating embeddings for {len(records):,} items...")
+        print(f"  Batch size: {batch_size}")
         print(f"  Strategy: Original text (no preprocessing)\n")
         
         # Prepare passages with E5 instruction
@@ -591,10 +591,10 @@ class EmbeddingGenerator:
         embeddings = np.vstack(embeddings_list)
         
         # Validate embeddings
-        print(f"\n✓ Embeddings generated: {{embeddings.shape}}")
-        print(f"  Mean norm: {{np.linalg.norm(embeddings, axis=1).mean():.4f}} (should be ~1.0)")
-        print(f"  All valid: {{np.all(np.isfinite(embeddings))}}")
-        print(f"  Memory: {{embeddings.nbytes / 1e6:.1f}} MB")
+        print(f"\n✓ Embeddings generated: {embeddings.shape}")
+        print(f"  Mean norm: {np.linalg.norm(embeddings, axis=1).mean():.4f} (should be ~1.0)")
+        print(f"  All valid: {np.all(np.isfinite(embeddings))}")
+        print(f"  Memory: {embeddings.nbytes / 1e6:.1f} MB")
         
         return embeddings
     
@@ -609,7 +609,7 @@ class EmbeddingGenerator:
             Normalized embedding vector
         """
         # Use 'query:' prefix for E5 models
-        query_text = f"query: {{query}}"
+        query_text = f"query: {query}"
         
         return self.model.encode(
             query_text,
@@ -651,14 +651,14 @@ class VectorDatabase:
         self.collection_name = collection_name
         
         print(f"\n🗄️ Connecting to Qdrant Cloud...")
-        print(f"  URL: {{url[:50]}}...")
+        print(f"  URL: {url[:50]}...")
         
         self.client = QdrantClient(url=url, api_key=api_key)
         
         # Verify connection
         collections = self.client.get_collections()
         print(f"✓ Connected successfully")
-        print(f"  Existing collections: {{[c.name for c in collections.collections]}}")
+        print(f"  Existing collections: {[c.name for c in collections.collections]}")
     
     def create_collection(
         self, 
@@ -672,13 +672,13 @@ class VectorDatabase:
             dimension: Vector dimension
             recreate: If True, delete existing collection first
         """
-        print(f"\n📚 Setting up collection: '{{self.collection_name}}'")
+        print(f"\n📚 Setting up collection: '{self.collection_name}'")
         
         # Delete existing if requested
         if recreate:
             try:
                 existing = self.client.get_collection(self.collection_name)
-                print(f"  ⚠️ Collection exists with {{existing.points_count}} points")
+                print(f"  ⚠️ Collection exists with {existing.points_count} points")
                 print(f"  Deleting and recreating...")
                 self.client.delete_collection(self.collection_name)
             except Exception:
@@ -694,8 +694,8 @@ class VectorDatabase:
             )
         )
         
-        print(f"✓ Collection '{{self.collection_name}}' ready")
-        print(f"  Vector size: {{dimension}}")
+        print(f"✓ Collection '{self.collection_name}' ready")
+        print(f"  Vector size: {dimension}")
         print(f"  Distance metric: Cosine")
     
     def create_price_index(self) -> None:
@@ -719,7 +719,7 @@ class VectorDatabase:
             if "already exists" in str(e).lower():
                 print("✓ Price index already exists")
             else:
-                print(f"⚠️ Could not create index: {{e}}")
+                print(f"⚠️ Could not create index: {e}")
     
     def upload_data(
         self,
@@ -735,8 +735,8 @@ class VectorDatabase:
             embeddings: Corresponding embedding vectors
             batch_size: Number of points to upload per batch
         """
-        print(f"\n📤 Uploading {{len(records):,}} points to Qdrant")
-        print(f"  Batch size: {{batch_size}}\n")
+        print(f"\n📤 Uploading {len(records):,} points to Qdrant")
+        print(f"  Batch size: {batch_size}\n")
         
         point_id = 0
         
@@ -765,10 +765,9 @@ class VectorDatabase:
         info = self.client.get_collection(self.collection_name)
         
         print(f"\n✓ Upload complete!")
-        print(f"  Expected: {{len(records):,}}")
-        print(f"  In Qdrant: {{info.points_count:,}}")
-        print(f"  Status: '{{'✓ MATCH' if info.points_count == len(records) else '❌ MISMATCH'}}'")
-    
+        print(f"  Expected: {len(records):,}")
+        print(f"  In Qdrant: {info.points_count:,}")
+        print(f"  Status: '{'✓ MATCH' if info.points_count == len(records) else '❌ MISMATCH'}'")    
     def search(
         self,
         query_vector: np.ndarray,
@@ -820,24 +819,98 @@ class VectorDatabase:
                     for r in results:
                         price = r.payload.get('price', 0)
                         
-                        # Extract price constraints from filter
-                        # This is a simplified version - extend as needed
+                        # Check if item passes all filter conditions
+                        passes_filters = True
                         for cond in filters.must:
                             if hasattr(cond, 'range'):
                                 if hasattr(cond.range, 'lte') and price > cond.range.lte:
-                                    continue
+                                    passes_filters = False
+                                    break
                                 if hasattr(cond.range, 'gte') and price < cond.range.gte:
-                                    continue
+                                    passes_filters = False
+                                    break
                         
-                        filtered.append(r)
-                        if len(filtered) >= top_k:
-                            break
+                        if passes_filters:
+                            filtered.append(r)
+                            if len(filtered) >= top_k:
+                                break
                     
                     return filtered
                 
                 return results[:top_k]
             else:
                 raise e
+    
+    def run_diagnostics(self, embedder: 'EmbeddingGenerator') -> None:
+        """
+        Run diagnostic checks on the database and search functionality.
+        
+        Args:
+            embedder: EmbeddingGenerator instance for test embedding
+        """
+        print("\n" + "="*70)
+        print("🔍 RUNNING DIAGNOSTICS")
+        print("="*70)
+        
+        # Check collection
+        try:
+            info = self.client.get_collection(self.collection_name)
+            print(f"✓ Collection: {info.points_count:,} points")
+        except Exception as e:
+            print(f"❌ Collection check failed: {e}")
+            return
+        
+        # Test embedding generation
+        test_query = "سيارة"
+        try:
+            test_embedding = embedder.encode_query(test_query)
+            print(f"✓ Embedding generated: {test_embedding.shape}")
+        except Exception as e:
+            print(f"❌ Embedding generation failed: {e}")
+            return
+        
+        # Test raw search (no filters)
+        try:
+            raw_results = self.client.query_points(
+                collection_name=self.collection_name,
+                query=test_embedding.tolist(),
+                limit=3,
+                with_payload=True
+            ).points
+            
+            print(f"✓ Raw search returned: {len(raw_results)} results")
+            if raw_results:
+                print(f"  Top result: {raw_results[0].payload['title']} (score: {raw_results[0].score:.4f})")
+            else:
+                print("  ❌ NO RESULTS - This indicates a fundamental issue!")
+        except Exception as e:
+            print(f"❌ Raw search failed: {e}")
+        
+        # Check a random point to verify data quality
+        if info.points_count > 0:
+            try:
+                import random
+                random_id = random.randint(0, info.points_count - 1)
+                
+                point = self.client.retrieve(
+                    collection_name=self.collection_name,
+                    ids=[random_id],
+                    with_payload=True,
+                    with_vectors=True
+                )
+                
+                if point:
+                    print(f"\n✓ Sample point {random_id}:")
+                    print(f"  Title: {point[0].payload.get('title', 'N/A')}")
+                    print(f"  Has vector: {point[0].vector is not None}")
+                    if point[0].vector:
+                        print(f"  Vector dimension: {len(point[0].vector)}")
+                        vector_norm = np.linalg.norm(point[0].vector)
+                        print(f"  Vector norm: {vector_norm:.4f}")
+            except Exception as e:
+                print(f"⚠️ Could not retrieve sample point: {e}")
+        
+        print("\n" + "="*70)
 
 
 # ============================================================================
@@ -890,21 +963,21 @@ class SemanticSearchEngine:
             List of search results
         """
         if verbose:
-            print(f"\n{{'='*70}}")
-            print(f"🔍 Query: '{{query}}'")
-            print(f"{{'='*70}}")
+            print(f"\n{'='*70}")
+            print(f"🔍 Query: '{query}'")
+            print(f"{'='*70}")
         
         # Step 1: Analyze query
         analysis = self.analyzer.analyze(query)
         
         if verbose:
             print(f"\n📊 Analysis:")
-            print(f"  Clean Query: '{{analysis['clean_query']}}'")
+            print(f"  Clean Query: '{analysis['clean_query']}'")
             if analysis['numeric_filters']:
-                print(f"  Filters: {{analysis['numeric_filters']}}")
+                print(f"  Filters: {analysis['numeric_filters']}")
             if analysis['extracted_entities']:
                 entities = [e['text'] for e in analysis['extracted_entities']]
-                print(f"  Entities: {{entities}}")
+                print(f"  Entities: {entities}")
         
         # Step 2: Generate query embedding
         query_embedding = self.embedder.encode_query(analysis['clean_query'])
@@ -972,18 +1045,18 @@ class SemanticSearchEngine:
             print(f"\n❌ No results found")
             return
         
-        print(f"\n✨ Found {{len(results)}} results:\n")
+        print(f"\n✨ Found {len(results)} results:\n")
         
         for i, result in enumerate(results, 1):
-            print(f"{{i}}. 📦 {{result.payload['title']}}")
-            print(f"   💰 ${{result.payload['price']:.2f}}")
-            print(f"   📁 {{result.payload['category_title']}}")
-            print(f"   🎯 Score: {{result.score:.4f}}")
+            print(f"{i}. 📦 {result.payload['title']}")
+            print(f"   💰 ${result.payload['price']:.2f}")
+            print(f"   📁 {result.payload['category_title']}")
+            print(f"   🎯 Score: {result.score:.4f}")
             
             # Show snippet of description
             text = result.payload['combined_text']
             snippet = text[:150] + "..." if len(text) > 150 else text
-            print(f"   📝 {{snippet}}\n")
+            print(f"   📝 {snippet}\n")
 
 
 # ============================================================================
@@ -1097,11 +1170,11 @@ class TestRunner:
         print("\n" + "="*80)
         print("🧪 RUNNING COMPREHENSIVE TEST SUITE")
         print("="*80)
-        print(f"Total tests: {{len(self.TEST_CASES)}}\n")
+        print(f"Total tests: {len(self.TEST_CASES)}\n")
         
         for test in self.TEST_CASES:
             test_id = test['id']
-            print(f"Test {{test_id}}/{{len(self.TEST_CASES)}}: {{test['description']}}", end=" ... ")
+            print(f"Test {test_id}/{len(self.TEST_CASES)}: {test['description']}", end=" ... ")
             
             try:
                 # Run search
@@ -1129,10 +1202,10 @@ class TestRunner:
                     "status": "PASS" if len(results) > 0 else "FAIL"
                 }
                 
-                print(f"✅ ({{len(results)}} results, score: {{results[0].score:.4f}})")
+                print(f"✅ ({len(results)} results, score: {results[0].score:.4f})")
                 
             except Exception as e:
-                print(f"❌ ERROR: {{str(e)[:50]}}")
+                print(f"❌ ERROR: {str(e)[:50]}")
                 self.results[test_id] = {
                     "query": test['query'],
                     "description": test['description'],
@@ -1158,11 +1231,11 @@ class TestRunner:
         print("\n" + "="*80)
         print("📊 TEST SUMMARY")
         print("="*80)
-        print(f"  Total Tests: {{total}}")
-        print(f"  ✅ Passed: {{passed}} ({{passed/total*100:.1f}}%)")
-        print(f"  ❌ Failed: {{failed}} ({{failed/total*100:.1f}}%)")
-        print(f"  ⚠️ Errors: {{errors}} ({{errors/total*100:.1f}}%)")
-        print(f"  📊 Average Score: {{avg_score:.4f}}")
+        print(f"  Total Tests: {total}")
+        print(f"  ✅ Passed: {passed} ({passed/total*100:.1f}%)")
+        print(f"  ❌ Failed: {failed} ({failed/total*100:.1f}%)")
+        print(f"  ⚠️ Errors: {errors} ({errors/total*100:.1f}%)")
+        print(f"  📊 Average Score: {avg_score:.4f}")
         print("="*80)
     
     def save_report(self, format: str = "html") -> str:
@@ -1170,19 +1243,19 @@ class TestRunner:
         timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
         
         if format == "html":
-            filename = f"test_report_{{timestamp}}.html"
+            filename = f"test_report_{timestamp}.html"
             content = self._generate_html_report()
         elif format == "markdown":
-            filename = f"test_report_{{timestamp}}.md"
+            filename = f"test_report_{timestamp}.md"
             content = self._generate_markdown_report()
         else:  # json
-            filename = f"test_report_{{timestamp}}.json"
+            filename = f"test_report_{timestamp}.json"
             content = self._generate_json_report()
         
         with open(filename, 'w', encoding='utf-8') as f:
             f.write(content)
         
-        print(f"\n💾 Report saved: {{filename}}")
+        print(f"\n💾 Report saved: {filename}")
         return filename
     
     def _generate_html_report(self) -> str:
@@ -1190,11 +1263,43 @@ class TestRunner:
         total = len(self.results)
         passed = sum(1 for r in self.results.values() if r['status'] == "PASS")
         
-        html = f"<!DOCTYPE html>\n<html>\n<head>\n    <meta charset=\"UTF-8\">\n    <title>Semantic Search Test Report</title>\n    <style>\n        body {{ font-family: Arial, sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; }}\n        .header {{ background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 30px; border-radius: 10px; }}\n        .summary {{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin: 20px 0; }}\n        .card {{ background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); text-align: center; }}\n        .test {{ background: white; padding: 20px; margin: 10px 0; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }}\n        .pass {{ border-left: 5px solid #28a745; }}\n        .fail {{ border-left: 5px solid #dc3545; }}\n    </style>\n</head>\n<body>\n    <div class="header">\n        <h1>🚀 Semantic Search Test Report</h1>\n        <p>Generated: {{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}}</p>\n    </div>\n    <div class="summary">\n        <div class="card"><h3>Total Tests</h3><div style=\"font-size:32px\">{{total}}</div></div>\n        <div class="card"><h3>Success Rate</h3><div style=\"font-size:32px\">{{passed/total*100:.1f}}%</div></div>\n        <div class="card"><h3>Avg Score</h3><div style=\"font-size:32px\">{{sum(r['top_score'] for r in self.results.values())/total:.4f}}</div></div>\n    </div>\n"""
+        # Build HTML with proper escaping for CSS braces
+        html = f"""<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Semantic Search Test Report</title>
+    <style>
+        body {{ font-family: Arial, sans-serif; max-width: 1200px; margin: 0 auto; padding: 20px; }}
+        .header {{ background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 30px; border-radius: 10px; }}
+        .summary {{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin: 20px 0; }}
+        .card {{ background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); text-align: center; }}
+        .test {{ background: white; padding: 20px; margin: 10px 0; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }}
+        .pass {{ border-left: 5px solid #28a745; }}
+        .fail {{ border-left: 5px solid #dc3545; }}
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🚀 Semantic Search Test Report</h1>
+        <p>Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
+    </div>
+    <div class="summary">
+        <div class="card"><h3>Total Tests</h3><div style="font-size:32px">{total}</div></div>
+        <div class="card"><h3>Success Rate</h3><div style="font-size:32px">{passed/total*100:.1f}%</div></div>
+        <div class="card"><h3>Avg Score</h3><div style="font-size:32px">{sum(r['top_score'] for r in self.results.values())/total:.4f}</div></div>
+    </div>
+"""
         
         for test_id, result in self.results.items():
             status_class = "pass" if result['status'] == "PASS" else "fail"
-            html += f"\n    <div class=\"test {{status_class}}\">\n        <h3>Test {{test_id}}: {{result['description']}}</h3>\n        <p><strong>Query:</strong> {{result['query']}}</p>\n        <p><strong>Results:</strong> {{result['found']}} items (Score: {{result['top_score']:.4f}})</p>\n    </div>\n"
+            html += f"""
+    <div class="test {status_class}">
+        <h3>Test {test_id}: {result['description']}</h3>
+        <p><strong>Query:</strong> {result['query']}</p>
+        <p><strong>Results:</strong> {result['found']} items (Score: {result['top_score']:.4f})</p>
+    </div>
+"""
         
         html += "</body></html>"
         return html
@@ -1203,12 +1308,33 @@ class TestRunner:
         """Generate Markdown report."""
         total = len(self.results)
         passed = sum(1 for r in self.results.values() if r['status'] == "PASS")
+        avg_score = sum(r['top_score'] for r in self.results.values())/total
         
-        md = f"# 🚀 Semantic Search Test Report\n\n**Generated:** {{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}}\n\n## Summary\n\n- Total Tests: {{total}}\n- Passed: {{passed}} ({{passed/total*100:.1f}}%)\n- Average Score: {{sum(r['top_score'] for r in self.results.values())/total:.4f}}\n\n## Test Results\n\n"
+        md = f"""# 🚀 Semantic Search Test Report
+
+**Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+
+## Summary
+
+- Total Tests: {total}
+- Passed: {passed} ({passed/total*100:.1f}%)
+- Average Score: {avg_score:.4f}
+
+## Test Results
+
+"""
         
         for test_id, result in self.results.items():
             status = "✅" if result['status'] == "PASS" else "❌"
-            md += f"### {{status}} Test {{test_id}}: {{result['description']}}\n\n**Query:** {{result['query']}}  \n**Results:** {{result['found']}} items  \n**Top Score:** {{result['top_score']:.4f}}\n\n---\n\n"
+            md += f"""### {status} Test {test_id}: {result['description']}
+
+**Query:** {result['query']}  
+**Results:** {result['found']} items  
+**Top Score:** {result['top_score']:.4f}
+
+---
+
+"""
         
         return md
     
@@ -1272,7 +1398,7 @@ def main():
     # Initialize analyzer
     print("\n🧠 Creating query analyzer...")
     analyzer = GenericQueryAnalyzer(dataset_df=df)
-    print(f"✓ Analyzer ready (learned {{len(analyzer.categories)}} categories)")
+    print(f"✓ Analyzer ready (learned {len(analyzer.categories)} categories)")
     
     # Initialize embedder
     embedder = EmbeddingGenerator()
@@ -1295,21 +1421,18 @@ def main():
     print("\n" + "="*80)
     print("🗄️ STEP 4: SETTING UP DATABASE")
     print("="*80)
-    print("\n📚 Setting up collection: '{{self.collection_name}}'")
     
     # Create collection
-    self.client.create_collection(
-        collection_name=self.collection_name,
-        vectors_config=VectorParams(
-            size=dimension,
-            distance=Distance.COSINE,  # Best for normalized embeddings
-            on_disk=False              # Keep in memory for speed
-        )
-    )
+    database.create_collection(dimension=Config.EMBEDDING_DIM, recreate=True)
     
-    print(f"✓ Collection '{{self.collection_name}}' ready")
-    print(f"  Vector size: {{dimension}}")
-    print(f"  Distance metric: Cosine")
+    # Create price index for filtering
+    database.create_price_index()
+    
+    # Upload embeddings
+    database.upload_data(records, embeddings)
+    
+    # Run diagnostics to verify setup
+    database.run_diagnostics(embedder)
     
     # ========================================
     # STEP 5: INITIALIZE SEARCH ENGINE
@@ -1387,4 +1510,4 @@ if __name__ == "__main__":
             print("\n\nExiting...")
             break
         except Exception as e:
-            print(f"Error: {{e}}")
+            print(f"Error: {e}")
