@@ -22,6 +22,7 @@ import os
 import re
 import time
 import json
+import random
 from pathlib import Path
 from dataclasses import dataclass
 from typing import List, Dict, Optional, Tuple
@@ -50,8 +51,15 @@ class Config:
     """System configuration - UPDATE THESE VALUES FOR YOUR SETUP"""
     
     # Qdrant Cloud Configuration
-    QDRANT_URL = "https://002ec0a0-7e36-4abd-82d9-ea17fc898325.us-east4-0.gcp.cloud.qdrant.io"
-    QDRANT_API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3MiOiJtIn0.UKyFB0M3IPTsj20NE89h05mMjLyyeAtzw4GkX2qlROI"
+    # SECURITY: Use environment variables in production!
+    QDRANT_URL = os.getenv(
+        "QDRANT_URL",
+        "https://002ec0a0-7e36-4abd-82d9-ea17fc898325.us-east4-0.gcp.cloud.qdrant.io"
+    )
+    QDRANT_API_KEY = os.getenv(
+        "QDRANT_API_KEY", 
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3MiOiJtIn0.UKyFB0M3IPTsj20NE89h05mMjLyyeAtzw4GkX2qlROI"
+    )
     COLLECTION_NAME = "items_generic"
     
     # Model Configuration
@@ -767,7 +775,9 @@ class VectorDatabase:
         print(f"\n✓ Upload complete!")
         print(f"  Expected: {len(records):,}")
         print(f"  In Qdrant: {info.points_count:,}")
-        print(f"  Status: '{'✓ MATCH' if info.points_count == len(records) else '❌ MISMATCH'}'")    
+        print(f"  Status: '{'✓ MATCH' if info.points_count == len(records) else '❌ MISMATCH'}'")
+    
+    
     def search(
         self,
         query_vector: np.ndarray,
@@ -889,7 +899,6 @@ class VectorDatabase:
         # Check a random point to verify data quality
         if info.points_count > 0:
             try:
-                import random
                 random_id = random.randint(0, info.points_count - 1)
                 
                 point = self.client.retrieve(
@@ -1222,6 +1231,11 @@ class TestRunner:
     def _print_summary(self) -> None:
         """Print test summary statistics."""
         total = len(self.results)
+        
+        if total == 0:
+            print("\n⚠️ No test results to summarize")
+            return
+        
         passed = sum(1 for r in self.results.values() if r['status'] == 'PASS')
         failed = sum(1 for r in self.results.values() if r['status'] == 'FAIL')
         errors = sum(1 for r in self.results.values() if r['status'] == 'ERROR')
@@ -1261,7 +1275,12 @@ class TestRunner:
     def _generate_html_report(self) -> str:
         """Generate HTML report."""
         total = len(self.results)
+        
+        if total == 0:
+            return "<html><body><h1>No test results</h1></body></html>"
+        
         passed = sum(1 for r in self.results.values() if r['status'] == "PASS")
+        avg_score = sum(r['top_score'] for r in self.results.values()) / total
         
         # Build HTML with proper escaping for CSS braces
         html = f"""<!DOCTYPE html>
@@ -1287,7 +1306,7 @@ class TestRunner:
     <div class="summary">
         <div class="card"><h3>Total Tests</h3><div style="font-size:32px">{total}</div></div>
         <div class="card"><h3>Success Rate</h3><div style="font-size:32px">{passed/total*100:.1f}%</div></div>
-        <div class="card"><h3>Avg Score</h3><div style="font-size:32px">{sum(r['top_score'] for r in self.results.values())/total:.4f}</div></div>
+        <div class="card"><h3>Avg Score</h3><div style="font-size:32px">{avg_score:.4f}</div></div>
     </div>
 """
         
@@ -1307,6 +1326,10 @@ class TestRunner:
     def _generate_markdown_report(self) -> str:
         """Generate Markdown report."""
         total = len(self.results)
+        
+        if total == 0:
+            return "# No test results\n\nNo tests have been run."
+        
         passed = sum(1 for r in self.results.values() if r['status'] == "PASS")
         avg_score = sum(r['top_score'] for r in self.results.values())/total
         
